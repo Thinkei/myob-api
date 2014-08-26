@@ -34,6 +34,11 @@ module Myob
           new_record?(object) ? create(object) : update(object)
         end
 
+        def destroy(object)
+          response = @client.connection.delete(self.url(object), :headers => @client.headers)
+          response.status == 200
+        end
+
         def url(object = nil, params = nil)
           url = if self.model_route == ''
             "#{API_URL}"
@@ -57,14 +62,14 @@ module Myob
 
         def create(object)
           object = typecast(object)
-          response = @client.connection.post(self.url, :headers => @client.headers, :body => object.to_json)
-          response.status == 201
+          response = @client.connection.post(self.url(nil, :returnBody => true), :headers => @client.headers, :body => object.to_json)
+          response.status == 201 && response.parsed
         end
 
         def update(object)
           object = typecast(object)
-          response = @client.connection.put(self.url(object), :headers => @client.headers, :body => object.to_json)
-          response.status == 200
+          response = @client.connection.put(self.url(object, :returnBody => true), :headers => @client.headers, :body => object.to_json)
+          response.status == 200 && response.parsed
         end
 
         def typecast(object)
